@@ -66,17 +66,28 @@ metadata:
   namespace: {{ $envAll.Release.Namespace }}
 spec:
   policyTypes:
+{{- if or (and (hasKey (index $envAll.Values "network_policy") $label) (and (hasKey (index $envAll.Values.network_policy $label) "policy_types") (has "egress" (index $envAll.Values.network_policy $label "policy_types")))) (and (hasKey (index $envAll.Values "network_policy") $label) (index $envAll.Values.network_policy $label "egress")) }}
     - Egress
-{{- if hasKey (index $envAll.Values "network_policy") $label }}
-{{- if index $envAll.Values.network_policy $label "ingress" }}
+{{- end }}
+{{- if or (and (hasKey (index $envAll.Values "network_policy") $label) (and (hasKey (index $envAll.Values.network_policy $label) "policy_types") (has "Ingress" (index $envAll.Values.network_policy $label "policy_types")))) (and (hasKey (index $envAll.Values "network_policy") $label) (index $envAll.Values.network_policy $label "ingress")) }}
     - Ingress
 {{- end }}
-{{- end }}
+{{- if hasKey (index $envAll.Values "network_policy") $label }}
+{{- if index $envAll.Values.network_policy $label "egress" }}
   podSelector:
     matchLabels:
       {{ $name }}: {{ $label }}
+{{- if hasKey (index $envAll.Values "network_policy") $label }}
+{{- if hasKey (index $envAll.Values.network_policy $label) "pod_selector" }}
+{{- if index $envAll.Values.network_policy $label "pod_selector" "match_labels" }}
+{{ index $envAll.Values.network_policy $label "pod_selector" "match_labels" | toYaml | indent 6 }}
+{{ end }}
+{{ end }}
+{{ end }}
   egress:
-    - {}
+{{ index $envAll.Values.network_policy $label "egress" | toYaml | indent 4 }}
+{{- end }}
+{{- end }}
 {{- if hasKey (index $envAll.Values "network_policy") $label }}
 {{- if index $envAll.Values.network_policy $label "ingress" }}
   ingress:
